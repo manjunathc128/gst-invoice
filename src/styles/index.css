@@ -1,0 +1,10 @@
+/* Base tweaks only — Mantine handles component styling. */
+body {
+  margin: 0;
+}
+
+/* PDFDownloadLink renders an <a>; keep it looking like Mantine button text. */
+a {
+  color: inherit;
+  text-decoration: none;
+}
