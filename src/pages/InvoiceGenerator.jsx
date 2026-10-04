@@ -75,9 +75,7 @@ export default function InvoiceGenerator() {
         email: (v) => (!v || /^\S+@\S+\.\S+$/.test(v) ? null : 'Invalid email'),
       },
       buyer: {
-        name: (v) => (v?.trim() ? null : 'Buyer name is required'),
         pan: validatePan,
-        state: (v) => (v ? null : 'Select a state'),
       },
       ship: {
         pan: validatePan,
@@ -211,7 +209,7 @@ export default function InvoiceGenerator() {
                 <Title order={5} mb="sm">Bill To (Buyer)</Title>
                 <Stack gap="sm">
                   <SimpleGrid cols={{ base: 1, sm: 2 }}>
-                    <TextInput label="Name" withAsterisk placeholder="Customer / company name" {...form.getInputProps('buyer.name')} />
+                    <TextInput label="Name" placeholder="Customer / company name" {...form.getInputProps('buyer.name')} />
                     <TextInput label="GSTIN" placeholder="Buyer GSTIN (if registered)" {...form.getInputProps('buyer.gstin')} />
                   </SimpleGrid>
                   <SimpleGrid cols={{ base: 1, sm: 2 }}>
@@ -222,7 +220,6 @@ export default function InvoiceGenerator() {
                   <SimpleGrid cols={{ base: 1, sm: 2 }}>
                     <Select
                       label="State"
-                      withAsterisk
                       searchable
                       placeholder="Select buyer state"
                       data={STATE_OPTIONS}
