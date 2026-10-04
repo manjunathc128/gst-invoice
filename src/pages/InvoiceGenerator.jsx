@@ -403,7 +403,7 @@ export default function InvoiceGenerator() {
                   <Title order={5}>Live Preview</Title>
                   <Button size="xs" variant="subtle" onClick={openPreview}>Expand</Button>
                 </Group>
-                <PdfPreview data={invoiceData} height={480} />
+                <PdfPreview data={invoiceData} height={480} showToolbar={false} />
               </Card>
             </Stack>
           </Grid.Col>
@@ -417,7 +417,13 @@ export default function InvoiceGenerator() {
           size="90%"
           withCloseButton
         >
-          {previewOpened && <PdfPreview data={invoiceData} height="75vh" />}
+          {previewOpened && (
+            <PdfPreview
+              data={invoiceData}
+              height="75vh"
+              fileName={`${values.meta.invoiceNo || 'invoice'}.pdf`}
+            />
+          )}
         </Modal>
       </AppShell.Main>
     </AppShell>
