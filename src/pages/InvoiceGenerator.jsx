@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { PDFDownloadLink, PDFViewer } from '@react-pdf/renderer';
+import { PDFDownloadLink } from '@react-pdf/renderer';
 import { useForm } from '@mantine/form';
 import { useDisclosure } from '@mantine/hooks';
 import {
@@ -11,6 +11,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { computeTotals, numberToWords, fmt } from '../utils/invoiceCalc.js';
 import { STATE_OPTIONS, STATE_CODE_BY_NAME } from '../data/states.js';
 import InvoiceDocument from '../pdf/InvoiceDocument.jsx';
+import PdfPreview from '../pdf/PdfPreview.jsx';
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
 const blankItem = () => ({ desc: '', hsn: '', qty: '', rate: '', disc: '', gst: '' });
@@ -402,9 +403,7 @@ export default function InvoiceGenerator() {
                   <Title order={5}>Live Preview</Title>
                   <Button size="xs" variant="subtle" onClick={openPreview}>Expand</Button>
                 </Group>
-                <PDFViewer showToolbar={false} style={{ width: '100%', height: 480, border: 0 }}>
-                  <InvoiceDocument data={invoiceData} />
-                </PDFViewer>
+                <PdfPreview data={invoiceData} height={480} />
               </Card>
             </Stack>
           </Grid.Col>
@@ -418,9 +417,7 @@ export default function InvoiceGenerator() {
           size="90%"
           withCloseButton
         >
-          <PDFViewer style={{ width: '100%', height: '75vh', border: 0 }}>
-            <InvoiceDocument data={invoiceData} />
-          </PDFViewer>
+          {previewOpened && <PdfPreview data={invoiceData} height="75vh" />}
         </Modal>
       </AppShell.Main>
     </AppShell>

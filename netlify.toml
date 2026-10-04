@@ -5,7 +5,12 @@
 [build.environment]
   NODE_VERSION = "22"
 
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
 # SPA fallback so client-side routes (/login, /signup) work on refresh.
+# Function routes (/api/*) are matched before this fallback.
 [[redirects]]
   from = "/*"
   to = "/index.html"

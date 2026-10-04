@@ -23,9 +23,13 @@ export default function Signup() {
     },
   });
 
-  const handleSubmit = form.onSubmit((values) => {
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = form.onSubmit(async (values) => {
     setError('');
-    const res = signup(values.username, values.password);
+    setSubmitting(true);
+    const res = await signup(values.username, values.password);
+    setSubmitting(false);
     if (res.ok) navigate('/', { replace: true });
     else setError(res.error);
   });
@@ -58,7 +62,7 @@ export default function Signup() {
             {...form.getInputProps('confirmPassword')}
           />
 
-          <Button type="submit" fullWidth>Sign Up</Button>
+          <Button type="submit" fullWidth loading={submitting}>Sign Up</Button>
 
           <Text size="sm" ta="center" c="dimmed">
             Already have an account?{' '}
@@ -66,7 +70,7 @@ export default function Signup() {
           </Text>
 
           <Text size="xs" c="dimmed" ta="center">
-            Demo only: accounts are stored in your browser and are not secure.
+            Your account works across devices and browsers.
           </Text>
         </Stack>
       </Paper>

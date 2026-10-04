@@ -1,72 +1,80 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 
-const USERS_KEY = 'gst_users';
-const SESSION_KEY = 'gst_user';
-
-// NOTE: This is a frontend-only demo store. Credentials live in localStorage
-// and are NOT secure. Do not use real passwords here.
-
-// Lightweight, non-cryptographic hash so we don't store raw plaintext.
-// This is obfuscation only, not real security.
-function hash(str) {
-  let h = 0;
-  for (let i = 0; i < str.length; i++) {
-    h = (h << 5) - h + str.charCodeAt(i);
-    h |= 0;
-  }
-  return String(h);
-}
-
-function readUsers() {
-  try {
-    return JSON.parse(localStorage.getItem(USERS_KEY)) || [];
-  } catch {
-    return [];
-  }
-}
-
-function writeUsers(users) {
-  localStorage.setItem(USERS_KEY, JSON.stringify(users));
-}
+// Auth is backed by Netlify Functions + Netlify Blobs.
+// Credentials never live in the browser; the session is an httpOnly cookie
+// set by the server, so login persists across browsers/devices.
 
 const AuthContext = createContext(null);
 
+async function postJSON(url, body) {
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    credentials: 'same-origin',
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  let data = {};
+  try {
+    data = await res.json();
+  } catch {
+    // non-JSON response; leave data empty
+  }
+  return { res, data };
+}
+
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => sessionStorage.getItem(SESSION_KEY) || null);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const signup = (username, password) => {
-    const uname = username.trim().toLowerCase();
-    const users = readUsers();
-    if (users.some((u) => u.username === uname)) {
-      return { ok: false, error: 'An account with this username already exists' };
+  // On mount, ask the server who we are (reads the httpOnly session cookie).
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const res = await fetch('/api/me', { credentials: 'same-origin' });
+        const data = await res.json();
+        if (active) setUser(data.ok ? data.user : null);
+      } catch {
+        if (active) setUser(null);
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const signup = async (username, password) => {
+    const { res, data } = await postJSON('/api/signup', { username, password });
+    if (res.ok && data.ok) {
+      setUser(data.user);
+      return { ok: true };
     }
-    users.push({ username: uname, passwordHash: hash(password) });
-    writeUsers(users);
-    // Auto sign-in after signup.
-    sessionStorage.setItem(SESSION_KEY, uname);
-    setUser(uname);
-    return { ok: true };
+    return { ok: false, error: data.error || 'Signup failed' };
   };
 
-  const login = (username, password) => {
-    const uname = username.trim().toLowerCase();
-    const users = readUsers();
-    const found = users.find((u) => u.username === uname);
-    if (!found || found.passwordHash !== hash(password)) {
-      return { ok: false, error: 'Invalid username or password' };
+  const login = async (username, password) => {
+    const { res, data } = await postJSON('/api/login', { username, password });
+    if (res.ok && data.ok) {
+      setUser(data.user);
+      return { ok: true };
     }
-    sessionStorage.setItem(SESSION_KEY, uname);
-    setUser(uname);
-    return { ok: true };
+    return { ok: false, error: data.error || 'Login failed' };
   };
 
-  const logout = () => {
-    sessionStorage.removeItem(SESSION_KEY);
-    setUser(null);
+  const logout = async () => {
+    try {
+      await postJSON('/api/logout');
+    } finally {
+      setUser(null);
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, signup, login, logout }}>
+    <AuthContext.Provider
+      value={{ user, isAuthenticated: !!user, loading, signup, login, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );

@@ -21,9 +21,13 @@ export default function Login() {
     },
   });
 
-  const handleSubmit = form.onSubmit((values) => {
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = form.onSubmit(async (values) => {
     setError('');
-    const res = login(values.username, values.password);
+    setSubmitting(true);
+    const res = await login(values.username, values.password);
+    setSubmitting(false);
     if (res.ok) navigate('/', { replace: true });
     else setError(res.error);
   });
@@ -51,7 +55,7 @@ export default function Login() {
             {...form.getInputProps('password')}
           />
 
-          <Button type="submit" fullWidth>Login</Button>
+          <Button type="submit" fullWidth loading={submitting}>Login</Button>
 
           <Text size="sm" ta="center" c="dimmed">
             Don&apos;t have an account?{' '}
